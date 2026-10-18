@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_shell.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -59,10 +59,8 @@ class LoginScreen extends StatelessWidget {
             FilledButton(
               style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52)),
-              onPressed: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HomeShell()),
-              ),
+              onPressed: () => context.go('/products'),
+
               child: const Text('Войти'),
             ),
             const SizedBox(height: 8),

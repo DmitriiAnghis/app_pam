@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/mock_data.dart';
 import '../widgets/product_card.dart';
-import 'product_detail_screen.dart';
-import 'operation_form_screen.dart';
 
 class CatalogScreen extends StatelessWidget {
   const CatalogScreen({super.key});
@@ -21,10 +20,7 @@ class CatalogScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const OperationFormScreen()),
-        ),
+        onPressed: () => context.push('/operation'),
         icon: const Icon(Icons.add),
         label: const Text('Операция'),
       ),
@@ -86,12 +82,8 @@ class CatalogScreen extends StatelessWidget {
                 final product = mockProducts[index];
                 return ProductCard(
                   product: product,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProductDetailScreen(product: product),
-                    ),
-                  ),
+                  onTap: () => context.push('/products/${product.id}'),
+
                 );
               },
             ),

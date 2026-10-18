@@ -3,7 +3,12 @@ import '../data/mock_data.dart';
 import '../widgets/movement_tile.dart';
 
 class OperationFormScreen extends StatelessWidget {
-  const OperationFormScreen({super.key});
+  final int? productId;
+  final int? toLocationId;
+  final String? type;
+
+  const OperationFormScreen(
+      {super.key, this.productId, this.toLocationId, this.type});
 
   @override
   Widget build(BuildContext context) {

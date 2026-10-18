@@ -1,33 +1,18 @@
 import 'package:flutter/material.dart';
-import 'catalog_screen.dart';
-import 'locations_screen.dart';
-import 'history_screen.dart';
-import 'profile_screen.dart';
+import 'package:go_router/go_router.dart';
 
-class HomeShell extends StatefulWidget {
-  const HomeShell({super.key});
+class AppShell extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
 
-  @override
-  State<HomeShell> createState() => _HomeShellState();
-}
-
-class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
-
-  static const _screens = [
-    CatalogScreen(),
-    LocationsScreen(),
-    HistoryScreen(),
-    ProfileScreen(),
-  ];
+  const AppShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_index],
+      body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: navigationShell.goBranch,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),

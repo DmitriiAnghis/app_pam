@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/mock_data.dart';
 import '../widgets/location_card.dart';
-import 'location_detail_screen.dart';
 
 class LocationsScreen extends StatelessWidget {
   const LocationsScreen({super.key});
@@ -29,12 +29,8 @@ class LocationsScreen extends StatelessWidget {
                 final location = mockLocations[index];
                 return LocationCard(
                   location: location,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => LocationDetailScreen(location: location),
-                    ),
-                  ),
+                  onTap: () => context.push('/locations/${location.id}'),
+
                 );
               },
             ),
