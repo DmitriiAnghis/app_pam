@@ -15,6 +15,7 @@ class CatalogScreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {},
+            tooltip: 'Уведомления',
             icon: const Icon(Icons.notifications_none),
           ),
         ],
@@ -64,6 +65,16 @@ class CatalogScreen extends StatelessWidget {
                   onPressed: () {},
                 ),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Найдено товаров: ${mockProducts.length}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
           ),
           Expanded(
