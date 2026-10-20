@@ -1,44 +1,13 @@
+import 'app_user.dart';
+import 'location.dart';
+import 'product.dart';
+import 'stock_movement.dart';
 
-class Product {
-  final int id;
-  final String sku;
-  final String name;
-  final String category;
-  final String unit;
-  final int quantity;
-  final int locationId;
-  final String imageUrl;
-
-  const Product(this.id, this.sku, this.name, this.category, this.unit,
-      this.quantity, this.locationId, this.imageUrl);
-}
-
-class Location {
-  final int id;
-  final String code;
-  final String zone;
-  final int capacity;
-
-  const Location(this.id, this.code, this.zone, this.capacity);
-}
-
-enum MovementType { receipt, shipment, transfer }
-
-class StockMovement {
-  final int id;
-  final int productId;
-  final MovementType type;
-  final int quantity;
-  final int? fromLocationId;
-  final int? toLocationId;
-  final int userId;
-  final String note;
-  final DateTime createdAt;
-
-  const StockMovement(this.id, this.productId, this.type, this.quantity,
-      this.fromLocationId, this.toLocationId, this.userId, this.note,
-      this.createdAt);
-}
+export 'app_user.dart';
+export 'location.dart';
+export 'product.dart';
+export 'stock_movement.dart';
+export '../utils/format.dart' show formatDate;
 
 const mockLocations = [
   Location(1, 'A-01-01', 'Зона A · Стеллажи', 400),
@@ -72,8 +41,6 @@ const mockProducts = [
       'Тара', 'шт', 7, 8, ''),
 ];
 
-const mockCategories = ['Все', 'Упаковка', 'Спецодежда', 'Оборудование', 'Тара'];
-
 final mockMovements = [
   StockMovement(1, 1, MovementType.receipt, 200, null, 4, 1,
       'Поставка от ООО «КартонПак», накладная №4521', DateTime(2026, 10, 14, 9, 15)),
@@ -93,6 +60,10 @@ final mockMovements = [
       'Перенос из зоны приёмки', DateTime(2026, 10, 10, 9, 45)),
 ];
 
+const mockUser = AppUser(1, 'Дмитрий Ангиш', 'dmitrii.anghis@stockpilot.md');
+
+const mockCategories = ['Все', 'Упаковка', 'Спецодежда', 'Оборудование', 'Тара'];
+
 const mockUserName = 'Дмитрий Ангиш';
 const mockUserEmail = 'dmitrii.anghis@stockpilot.md';
 const mockUserRole = 'Старший кладовщик · Склад «Центральный»';
@@ -109,8 +80,3 @@ List<StockMovement> movementsForProduct(int productId) =>
 
 int usedCapacity(int locationId) =>
     productsInLocation(locationId).fold(0, (sum, p) => sum + p.quantity);
-
-String formatDate(DateTime d) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(d.day)}.${two(d.month)}.${d.year}, ${two(d.hour)}:${two(d.minute)}';
-}
