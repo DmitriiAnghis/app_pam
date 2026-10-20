@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+import 'package:provider/provider.dart';
+import '../data/product.dart';
+import '../models/locations_model.dart';
 import 'category_avatar.dart';
 
 class ProductCard extends StatelessWidget {
@@ -12,7 +14,8 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final location = locationById(product.locationId);
+    final locationCode =
+        context.watch<LocationsModel>().codeOf(product.locationId);
     final isLow = product.quantity < 10;
 
     return Card(
@@ -37,7 +40,8 @@ class ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${product.sku} · ячейка ${location.code}',
+                      '${product.sku} · ячейка $locationCode',
+
                       style: text.bodySmall
                           ?.copyWith(color: scheme.onSurfaceVariant),
                     ),

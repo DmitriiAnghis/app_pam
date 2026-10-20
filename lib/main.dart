@@ -1,7 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'data/mock_repositories.dart';
+import 'models/locations_model.dart';
+import 'models/movements_model.dart';
+import 'models/products_model.dart';
+import 'models/profile_model.dart';
 import 'router.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  final backend = MockBackend();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<MockBackend>.value(value: backend),
+        ChangeNotifierProvider(
+          create: (_) => ProductsModel(MockProductRepository(backend))..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              LocationsModel(MockLocationRepository(backend))..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              MovementsModel(MockMovementRepository(backend))..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProfileModel(MockUserRepository(backend))..load(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -21,7 +52,6 @@ class MyApp extends StatelessWidget {
         cardTheme: const CardThemeData(margin: EdgeInsets.zero),
       ),
       routerConfig: router,
-
     );
   }
 }
