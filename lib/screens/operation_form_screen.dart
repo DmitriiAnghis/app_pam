@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import '../data/mock_data.dart';
+import 'package:provider/provider.dart';
+import '../data/product.dart';
+import '../data/stock_movement.dart';
+import '../models/locations_model.dart';
+import '../models/movements_model.dart';
+import '../models/products_model.dart';
 import '../widgets/movement_tile.dart';
 
 class OperationFormScreen extends StatefulWidget {
@@ -25,6 +30,7 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
   int? _productId;
   int? _fromId;
   int? _toId;
+  bool _busy = false;
 
   @override
   void initState() {
@@ -34,9 +40,12 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
     _productId = widget.productId;
     _toId = widget.toLocationId;
     if (_productId != null && _type != MovementType.receipt) {
-      _fromId = productById(_productId!).locationId;
+      _fromId = context.read<ProductsModel>().byId(_productId!)?.locationId;
     }
   }
+
+  Product? get _product =>
+      _productId == null ? null : context.read<ProductsModel>().byId(_productId!);
 
   @override
   void dispose() {
@@ -53,27 +62,52 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
     if (qty == null) return 'Введите количество';
     if (qty <= 0) return 'Количество должно быть больше нуля';
     if (qty > 100000) return 'Слишком большое количество';
-    if (_needsFrom && _productId != null) {
-      final stock = productById(_productId!).quantity;
-      if (qty > stock) return 'На остатке только $stock';
+    final product = _product;
+    if (_needsFrom && product != null && qty > product.quantity) {
+      return 'На остатке только ${product.quantity}';
     }
     return null;
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    final product = productById(_productId!);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            '${movementLabel(_type)} проведена: ${product.sku}, ${_qtyCtrl.text} ${product.unit}')));
+
+    final draft = StockMovement(
+      0,
+      _productId!,
+      _type,
+      int.parse(_qtyCtrl.text),
+      _needsFrom ? _fromId : null,
+      _needsTo ? _toId : null,
+      0,
+      _noteCtrl.text.trim(),
+      DateTime.now(),
+    );
+
+    setState(() => _busy = true);
+    final error = await context.read<MovementsModel>().add(draft);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    context.read<ProductsModel>().refresh();
+    context.read<LocationsModel>().refresh();
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${movementLabel(_type)} проведена')));
     context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final products = context.watch<ProductsModel>().products;
+    final locations = context.watch<LocationsModel>().locations;
+    final unit = _product?.unit;
     final locationItems = [
-      for (final l in mockLocations)
+      for (final l in locations)
         DropdownMenuItem(value: l.id, child: Text('${l.code} · ${l.zone}')),
     ];
 
@@ -101,7 +135,8 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
             ),
             const SizedBox(height: 24),
             DropdownButtonFormField<int>(
-              initialValue: _productId,
+              initialValue:
+                  products.any((p) => p.id == _productId) ? _productId : null,
               isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Товар',
@@ -109,7 +144,7 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
                 border: OutlineInputBorder(),
               ),
               items: [
-                for (final p in mockProducts)
+                for (final p in products)
                   DropdownMenuItem(
                     value: p.id,
                     child: Text('${p.sku} · ${p.name}',
@@ -128,9 +163,7 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
               decoration: InputDecoration(
                 labelText: 'Количество',
                 prefixIcon: const Icon(Icons.numbers),
-                suffixText: _productId == null
-                    ? null
-                    : productById(_productId!).unit,
+                suffixText: unit,
                 border: const OutlineInputBorder(),
               ),
               validator: _validateQty,
@@ -139,7 +172,8 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 key: const ValueKey('from'),
-                initialValue: _fromId,
+                initialValue:
+                    locations.any((l) => l.id == _fromId) ? _fromId : null,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Из ячейки',
@@ -155,7 +189,9 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 key: const ValueKey('to'),
-                initialValue: _toId,
+                initialValue:
+                    locations.any((l) => l.id == _toId) ? _toId : null,
+
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'В ячейку',
@@ -190,7 +226,8 @@ class _OperationFormScreenState extends State<OperationFormScreen> {
             FilledButton.icon(
               style:
                   FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-              onPressed: _save,
+              onPressed: _busy ? null : _save,
+
               icon: const Icon(Icons.check),
               label: const Text('Провести операцию'),
             ),
