@@ -3,12 +3,6 @@ import 'location.dart';
 import 'product.dart';
 import 'stock_movement.dart';
 
-export 'app_user.dart';
-export 'location.dart';
-export 'product.dart';
-export 'stock_movement.dart';
-export '../utils/format.dart' show formatDate;
-
 const mockLocations = [
   Location(1, 'A-01-01', 'Зона A · Стеллажи', 400),
   Location(2, 'A-01-02', 'Зона A · Стеллажи', 800),
@@ -61,22 +55,3 @@ final mockMovements = [
 ];
 
 const mockUser = AppUser(1, 'Дмитрий Ангиш', 'dmitrii.anghis@stockpilot.md');
-
-const mockCategories = ['Все', 'Упаковка', 'Спецодежда', 'Оборудование', 'Тара'];
-
-const mockUserName = 'Дмитрий Ангиш';
-const mockUserEmail = 'dmitrii.anghis@stockpilot.md';
-const mockUserRole = 'Старший кладовщик · Склад «Центральный»';
-
-Product productById(int id) => mockProducts.firstWhere((p) => p.id == id);
-
-Location locationById(int id) => mockLocations.firstWhere((l) => l.id == id);
-
-List<Product> productsInLocation(int locationId) =>
-    mockProducts.where((p) => p.locationId == locationId).toList();
-
-List<StockMovement> movementsForProduct(int productId) =>
-    mockMovements.where((m) => m.productId == productId).toList();
-
-int usedCapacity(int locationId) =>
-    productsInLocation(locationId).fold(0, (sum, p) => sum + p.quantity);

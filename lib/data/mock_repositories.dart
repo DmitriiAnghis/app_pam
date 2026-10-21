@@ -1,8 +1,12 @@
+import 'app_user.dart';
+import 'location.dart';
 import 'location_repository.dart';
 import 'mock_data.dart';
 import 'movement_repository.dart';
+import 'product.dart';
 import 'product_repository.dart';
 import 'result.dart';
+import 'stock_movement.dart';
 import 'user_repository.dart';
 
 class MockBackend {

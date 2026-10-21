@@ -169,6 +169,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
       appBar: AppBar(
         title: const Text('Каталог товаров'),
         actions: [
+          IconButton(
+            onPressed: () => context.read<ProductsModel>().load(),
+            tooltip: 'Обновить',
+            icon: const Icon(Icons.refresh),
+          ),
+
           Consumer<ProductsModel>(
             builder: (context, products, child) => IconButton(
               onPressed: () => ScaffoldMessenger.of(context).showSnackBar(

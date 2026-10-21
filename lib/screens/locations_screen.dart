@@ -48,7 +48,17 @@ class _LocationsScreenState extends State<LocationsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Складские ячейки')),
+      appBar: AppBar(
+        title: const Text('Складские ячейки'),
+        actions: [
+          IconButton(
+            onPressed: () => context.read<LocationsModel>().load(),
+            tooltip: 'Обновить',
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+
       body: Column(
         children: [
           Padding(
