@@ -68,6 +68,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text('История операций'),
         actions: [
           IconButton(
+            onPressed: () => context.read<MovementsModel>().load(),
+            tooltip: 'Обновить',
+            icon: const Icon(Icons.refresh),
+          ),
+
+          IconButton(
             onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                     content: Text('Экспорт CSV будет доступен позже'))),
