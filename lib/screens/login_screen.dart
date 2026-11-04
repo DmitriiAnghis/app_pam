@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../data/auth_api.dart';
+import '../data/result.dart';
+import '../models/locations_model.dart';
+import '../models/movements_model.dart';
+import '../models/products_model.dart';
+import '../models/profile_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,7 +19,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
   bool _obscure = true;
+  bool _isRegister = false;
+  bool _busy = false;
 
   static final _emailRe = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
@@ -20,12 +30,31 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _nameCtrl.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    context.go('/products');
+    final auth = context.read<AuthApi>();
+    setState(() => _busy = true);
+    final result = _isRegister
+        ? await auth.register(
+            _emailCtrl.text.trim(), _passCtrl.text, _nameCtrl.text.trim())
+        : await auth.login(_emailCtrl.text.trim(), _passCtrl.text);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    switch (result) {
+      case Ok():
+        context.read<ProductsModel>().load();
+        context.read<LocationsModel>().load();
+        context.read<MovementsModel>().load();
+        context.read<ProfileModel>().load();
+        context.go('/products');
+      case Err(:final msg):
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
+    }
   }
 
   @override
@@ -64,6 +93,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: text.bodyMedium
                       ?.copyWith(color: scheme.onSurfaceVariant)),
               const SizedBox(height: 40),
+              if (_isRegister) ...[
+                TextFormField(
+                  controller: _nameCtrl,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Имя',
+                    prefixIcon: Icon(Icons.person_outline),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Введите имя'
+                      : null,
+                ),
+                const SizedBox(height: 16),
+              ],
               TextFormField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
@@ -108,16 +153,22 @@ class _LoginScreenState extends State<LoginScreen> {
               FilledButton(
                 style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(52)),
-                onPressed: _submit,
-                child: const Text('Войти'),
+                onPressed: _busy ? null : _submit,
+                child: _busy
+                    ? const SizedBox.square(
+                        dimension: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(_isRegister ? 'Зарегистрироваться' : 'Войти'),
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () {},
-                child: const Text('Нет аккаунта? Зарегистрируйтесь'),
+                onPressed: () => setState(() => _isRegister = !_isRegister),
+                child: Text(_isRegister
+                    ? 'Уже есть аккаунт? Войти'
+                    : 'Нет аккаунта? Зарегистрируйтесь'),
               ),
               const SizedBox(height: 24),
-              Text('версия 0.3 · L3',
+              Text('версия 0.5 · L5',
                   textAlign: TextAlign.center,
                   style: text.bodySmall?.copyWith(color: scheme.outline)),
             ],

@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+
 import 'screens/catalog_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/location_detail_screen.dart';
@@ -9,27 +10,29 @@ import 'screens/product_detail_screen.dart';
 import 'screens/profile_screen.dart';
 import 'widgets/app_shell.dart';
 
-final router = GoRouter(
-  initialLocation: '/login',
-  routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/operation',
-      builder: (context, state) => OperationFormScreen(
-        productId: int.tryParse(state.uri.queryParameters['productId'] ?? ''),
-        toLocationId:
-            int.tryParse(state.uri.queryParameters['toLocationId'] ?? ''),
-        type: state.uri.queryParameters['type'],
+late final GoRouter router;
+
+final List<RouteBase> appRoutes = [
+  GoRoute(
+    path: '/login',
+    builder: (context, state) => const LoginScreen(),
+  ),
+  GoRoute(
+    path: '/operation',
+    builder: (context, state) => OperationFormScreen(
+      productId: int.tryParse(state.uri.queryParameters['productId'] ?? ''),
+      toLocationId: int.tryParse(
+        state.uri.queryParameters['toLocationId'] ?? '',
       ),
+      type: state.uri.queryParameters['type'],
     ),
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) =>
-          AppShell(navigationShell: navigationShell),
-      branches: [
-        StatefulShellBranch(routes: [
+  ),
+  StatefulShellRoute.indexedStack(
+    builder: (context, state, navigationShell) =>
+        AppShell(navigationShell: navigationShell),
+    branches: [
+      StatefulShellBranch(
+        routes: [
           GoRoute(
             path: '/products',
             builder: (context, state) => const CatalogScreen(),
@@ -43,8 +46,10 @@ final router = GoRouter(
               ),
             ],
           ),
-        ]),
-        StatefulShellBranch(routes: [
+        ],
+      ),
+      StatefulShellBranch(
+        routes: [
           GoRoute(
             path: '/locations',
             builder: (context, state) => const LocationsScreen(),
@@ -58,20 +63,24 @@ final router = GoRouter(
               ),
             ],
           ),
-        ]),
-        StatefulShellBranch(routes: [
+        ],
+      ),
+      StatefulShellBranch(
+        routes: [
           GoRoute(
             path: '/history',
             builder: (context, state) => const HistoryScreen(),
           ),
-        ]),
-        StatefulShellBranch(routes: [
+        ],
+      ),
+      StatefulShellBranch(
+        routes: [
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
           ),
-        ]),
-      ],
-    ),
-  ],
-);
+        ],
+      ),
+    ],
+  ),
+];

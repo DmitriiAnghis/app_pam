@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:app_pam/data/auth_api.dart';
 import 'package:app_pam/data/mock_repositories.dart';
 import 'package:app_pam/main.dart';
 import 'package:app_pam/models/locations_model.dart';
@@ -9,8 +11,11 @@ import 'package:app_pam/models/products_model.dart';
 import 'package:app_pam/models/profile_model.dart';
 import 'package:app_pam/router.dart';
 
+import 'fakes.dart';
+
 Widget _app(MockBackend backend) => MultiProvider(
       providers: [
+        Provider<AuthApi>(create: (_) => FakeAuthApi()),
         Provider<MockBackend>.value(value: backend),
         ChangeNotifierProvider(
             create: (_) => ProductsModel(MockProductRepository(backend))..load()),
@@ -27,7 +32,11 @@ Widget _app(MockBackend backend) => MultiProvider(
     );
 
 void main() {
-  testWidgets('Вход: ошибки валидации, затем каталог грузится из repository',
+  TestWidgetsFlutterBinding.ensureInitialized();
+  router = GoRouter(initialLocation: '/login', routes: appRoutes);
+  setUp(() => router.go('/login'));
+
+  testWidgets('Вход: ошибки валидации, неверный пароль, затем каталог',
       (tester) async {
     await tester.pumpWidget(_app(MockBackend()));
     expect(find.text('StockPilot'), findsOneWidget);
@@ -38,6 +47,11 @@ void main() {
     expect(find.text('Введите пароль'), findsOneWidget);
 
     await tester.enterText(find.byType(TextFormField).at(0), 'ana@test.md');
+    await tester.enterText(find.byType(TextFormField).at(1), 'wrong12');
+    await tester.tap(find.text('Войти'));
+    await tester.pumpAndSettle();
+    expect(find.text('Неверный email или пароль'), findsOneWidget);
+
     await tester.enterText(find.byType(TextFormField).at(1), 'parola123');
     await tester.tap(find.text('Войти'));
     await tester.pump();
@@ -49,7 +63,6 @@ void main() {
 
   testWidgets('Авария mock-а показывает экран ошибки с «Повторить»',
       (tester) async {
-    router.go('/login');
     final backend = MockBackend()..simulateError = true;
 
     await tester.pumpWidget(_app(backend));
