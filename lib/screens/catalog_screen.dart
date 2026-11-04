@@ -15,19 +15,14 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
-  String _query = '';
   String _category = 'Все';
   int? _locationId;
 
-  List<Product> _filter(List<Product> all) {
-    final q = _query.trim().toLowerCase();
-    return all.where((p) {
-      if (_category != 'Все' && p.category != _category) return false;
-      if (_locationId != null && p.locationId != _locationId) return false;
-      if (q.isEmpty) return true;
-      return p.name.toLowerCase().contains(q) || p.sku.toLowerCase().contains(q);
-    }).toList();
-  }
+  List<Product> _filter(List<Product> all) => all.where((p) {
+        if (_category != 'Все' && p.category != _category) return false;
+        if (_locationId != null && p.locationId != _locationId) return false;
+        return true;
+      }).toList();
 
   Future<void> _pickLocation() async {
     final locations = context.read<LocationsModel>().locations;
@@ -131,7 +126,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Найдено товаров: ${items.length}',
+                'Показано товаров: ${items.length}',
+
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -139,9 +135,19 @@ class _CatalogScreenState extends State<CatalogScreen> {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-              itemCount: items.length,
+              itemCount: items.length + (model.hasMore ? 1 : 0),
               separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
+                if (index == items.length) {
+                  context.read<ProductsModel>().loadMore();
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                        child: SizedBox.square(
+                            dimension: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2))),
+                  );
+                }
                 final product = items[index];
                 return Dismissible(
                   key: ValueKey(product.id),
@@ -204,7 +210,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
             child: SearchBar(
               hintText: 'Поиск по названию или SKU',
               leading: const Icon(Icons.search),
-              onChanged: (v) => setState(() => _query = v),
+              onSubmitted: (q) =>
+                  context.read<ProductsModel>().load(search: q.trim()),
               elevation: const WidgetStatePropertyAll(0),
             ),
           ),
