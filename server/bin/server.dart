@@ -1,7 +1,7 @@
 // PAM backend template - Dart/Shelf reference implementation.
 //
 // Start:  dart pub get && dart run
-// Env:    PORT (default 8080), JWT_SECRET (default dev-secret-change-me)
+// Env:    PORT (default 8081), JWT_SECRET (default dev-secret-change-me)
 
 import 'dart:io';
 
@@ -19,7 +19,7 @@ import 'package:server/products.dart';
 import 'package:server/stock_movements.dart';
 
 Future<void> main() async {
-  final port = int.tryParse(Platform.environment['PORT'] ?? '') ?? 8080;
+  final port = int.tryParse(Platform.environment['PORT'] ?? '') ?? 8081;
 
   initDb('app.db'); // creates app.db + schema on first start
   initFileStorage('uploads'); // creates uploads/ on first start

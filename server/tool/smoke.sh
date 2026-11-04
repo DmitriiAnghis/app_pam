@@ -1,6 +1,6 @@
 #!/bin/bash
 # Сессия curl по сущностям темы: register → 401 без token-а → создание → список с search=
-B=${1:-http://localhost:8080}
+B=${1:-http://localhost:8081}
 set -x
 curl -s $B/health; echo
 curl -s -i $B/products | head -1

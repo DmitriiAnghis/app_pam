@@ -16,9 +16,9 @@ String get apiBase {
   const fromEnv = String.fromEnvironment('API_BASE');
   if (fromEnv.isNotEmpty) return fromEnv;
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    return 'http://10.0.2.2:8080';
+    return 'http://10.0.2.2:8081';
   }
-  return 'http://localhost:8080';
+  return 'http://localhost:8081';
 }
 
 Future<void> main() async {
