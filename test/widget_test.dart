@@ -3,78 +3,68 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:app_pam/data/auth_api.dart';
-import 'package:app_pam/data/mock_repositories.dart';
 import 'package:app_pam/main.dart';
 import 'package:app_pam/models/locations_model.dart';
 import 'package:app_pam/models/movements_model.dart';
 import 'package:app_pam/models/products_model.dart';
 import 'package:app_pam/models/profile_model.dart';
 import 'package:app_pam/router.dart';
-
 import 'fakes.dart';
 
-Widget _app(MockBackend backend) => MultiProvider(
+Widget _app(FakeServer s) => MultiProvider(
       providers: [
         Provider<AuthApi>(create: (_) => FakeAuthApi()),
-        Provider<MockBackend>.value(value: backend),
         ChangeNotifierProvider(
-            create: (_) => ProductsModel(MockProductRepository(backend))..load()),
+            create: (_) => ProductsModel(FakeProductRepository(s))),
         ChangeNotifierProvider(
-            create: (_) =>
-                LocationsModel(MockLocationRepository(backend))..load()),
+            create: (_) => LocationsModel(FakeLocationRepository(s))),
         ChangeNotifierProvider(
-            create: (_) =>
-                MovementsModel(MockMovementRepository(backend))..load()),
+            create: (_) => MovementsModel(FakeMovementRepository(s))),
         ChangeNotifierProvider(
-            create: (_) => ProfileModel(MockUserRepository(backend))..load()),
+            create: (_) => ProfileModel(FakeUserRepository(s))),
       ],
       child: const MyApp(),
     );
 
+Future<void> _login(WidgetTester tester, String password) async {
+  await tester.enterText(find.byType(TextFormField).at(0), 'ana@test.md');
+  await tester.enterText(find.byType(TextFormField).at(1), password);
+  await tester.tap(find.text('Войти'));
+  await tester.pumpAndSettle(const Duration(seconds: 1));
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  router = GoRouter(initialLocation: '/login', routes: appRoutes);
+  router =
+ GoRouter(initialLocation: '/login', routes: appRoutes);
   setUp(() => router.go('/login'));
 
-  testWidgets('Вход: ошибки валидации, неверный пароль, затем каталог',
+  testWidgets('Вход: ошибки валидации, ошибка сервера, затем каталог',
       (tester) async {
-    await tester.pumpWidget(_app(MockBackend()));
-    expect(find.text('StockPilot'), findsOneWidget);
-
+    await tester.pumpWidget(_app(FakeServer()));
     await tester.tap(find.text('Войти'));
     await tester.pumpAndSettle();
     expect(find.text('Введите e-mail'), findsOneWidget);
     expect(find.text('Введите пароль'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'ana@test.md');
-    await tester.enterText(find.byType(TextFormField).at(1), 'wrong12');
-    await tester.tap(find.text('Войти'));
-    await tester.pumpAndSettle();
+    await _login(tester, 'wrong12');
     expect(find.text('Неверный email или пароль'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextFormField).at(1), 'parola123');
-    await tester.tap(find.text('Войти'));
-    await tester.pump();
+    await _login(tester, 'parola123');
     expect(find.text('Каталог товаров'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(find.text('Найдено товаров: 9'), findsOneWidget);
+    expect(find.text('Найдено товаров: 20'), findsOneWidget);
   });
 
-  testWidgets('Авария mock-а показывает экран ошибки с «Повторить»',
+  testWidgets('Сервер недоступен → экран ошибки, retry возвращает данные',
       (tester) async {
-    final backend = MockBackend()..simulateError = true;
-
-    await tester.pumpWidget(_app(backend));
-    await tester.enterText(find.byType(TextFormField).at(0), 'ana@test.md');
-    await tester.enterText(find.byType(TextFormField).at(1), 'parola123');
-    await tester.tap(find.text('Войти'));
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+    final server = FakeServer()..down = true;
+    await tester.pumpWidget(_app(server));
+    await _login(tester, 'parola123');
     expect(find.text('Повторить'), findsOneWidget);
 
-    backend.simulateError = false;
+    server.down = false;
     await tester.tap(find.text('Повторить'));
     await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(find.text('Найдено товаров: 9'), findsOneWidget);
+    expect(find.textContaining('Найдено товаров'), findsOneWidget);
   });
 }

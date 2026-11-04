@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'data/api_client.dart';
 import 'data/auth_api.dart';
-import 'data/mock_repositories.dart';
+import 'data/http_repositories.dart';
 import 'data/token_store.dart';
 import 'models/locations_model.dart';
 import 'models/movements_model.dart';
@@ -28,27 +29,24 @@ Future<void> main() async {
   router = GoRouter(
       initialLocation: loggedIn ? '/products' : '/login', routes: appRoutes);
 
-  final backend = MockBackend();
+  final api = ApiClient(apiBase, tokens,
+      onUnauthorized: () => router.go('/login'));
 
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthApi>(create: (_) => AuthApi(apiBase, tokens)),
-
-        Provider<MockBackend>.value(value: backend),
         ChangeNotifierProvider(
-          create: (_) => ProductsModel(MockProductRepository(backend))..load(),
+          create: (_) => ProductsModel(HttpProductRepository(api))..load(),
         ),
         ChangeNotifierProvider(
-          create: (_) =>
-              LocationsModel(MockLocationRepository(backend))..load(),
+          create: (_) => LocationsModel(HttpLocationRepository(api))..load(),
         ),
         ChangeNotifierProvider(
-          create: (_) =>
-              MovementsModel(MockMovementRepository(backend))..load(),
+          create: (_) => MovementsModel(HttpMovementRepository(api))..load(),
         ),
         ChangeNotifierProvider(
-          create: (_) => ProfileModel(MockUserRepository(backend))..load(),
+          create: (_) => ProfileModel(HttpUserRepository(api))..load(),
         ),
       ],
       child: const MyApp(),
